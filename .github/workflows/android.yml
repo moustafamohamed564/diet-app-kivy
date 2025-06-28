@@ -1,0 +1,36 @@
+name: Build APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y python3-pip openjdk-17-jdk unzip
+          pip install buildozer
+
+      - name: Initialize Buildozer
+        run: |
+          buildozer init
+          sed -i 's/^android.api.*/android.api = 33/' buildozer.spec
+          sed -i 's/^# (list).*/android.permissions = INTERNET/' buildozer.spec
+
+      - name: Build APK
+        run: |
+          buildozer -v android debug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: DietApp-debug.apk
+          path: bin/android/debug/*.apk
